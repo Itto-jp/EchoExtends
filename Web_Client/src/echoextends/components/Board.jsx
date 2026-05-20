@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Cell from "./Cell";
 
 export default function Board() {
-  const size = 6;
+  const size = 7;
 
   const [isFirstTurn, setIsFirstTurn] = useState(true);
   const [board, setBoard] = useState(
@@ -52,13 +52,46 @@ export default function Board() {
       }
     }
 
+    
+
     setSelectableEnemies(list);
+
   };
+
+  // --- パス処理（selectableEnemies が変わったらチェック） ---
+useEffect(() => {
+  if (winnerMessage) return;
+  if (isFirstTurn) return;
+
+  //  赤枠がゼロ → 相手の石を選べない
+  if (selectableEnemies.length === 0) {
+    setCandidates([]);
+    setPlayer(player === 1 ? 2 : 1);
+    setTimeout(() => updateSelectableEnemies(), 0) ;
+    return;
+  }
+
+}, [selectableEnemies]);
+
+
+
+
+  
+
 
   // --- board が変わった時だけ更新（player の非同期ズレを防ぐ） ---
   useEffect(() => {
     updateSelectableEnemies();
   }, [board]);
+
+  
+
+  
+
+
+  
+
+
 
   // --- 勝利判定（盤面が埋まったら終了） ---
   useEffect(() => {
@@ -146,6 +179,8 @@ export default function Board() {
     }
 
     setCandidates(newCandidates);
+
+    
   };
 
   const { p1, p2 } = countStones();
