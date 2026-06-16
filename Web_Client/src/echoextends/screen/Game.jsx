@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Board from "../components/Board";
 import GameManager from "../logic/GameManager";
+import Pannel from "../components/Pannel";
+import { requestAIMove } from "../api/AI_Client";
 
-export default function Game({ mode }) {
-  const [manager] = useState(() => new GameManager(7));
+export default function Game({ mode, aiType }) {
+
+  const [manager] = useState(() => new GameManager(7)); // ボードサイズ
 
   const [isPassing, setIsPassing] = useState(false);
-
- 
-
 
   const [board, setBoard] = useState(manager.board);
   const [player, setPlayer] = useState(manager.player);
@@ -16,120 +16,128 @@ export default function Game({ mode }) {
   const [selectableEnemies, setSelectableEnemies] = useState(manager.selectableEnemies);
   const [winner, setWinner] = useState(manager.winner);
 
+  // --- AI のターン監視（AI モードのみ動作） ---
+  useEffect(() => {
+    if (mode !== "ai") return;        // AI モード以外は動かない
+    if (player !== 2) return;         // AI が後手の場合
+    if (winner) return;               // 勝敗決定後は動かない
+    if (isPassing) return;            // パス中は動かない
+
+    // AI の手をサーバに問い合わせる
+    requestAIMove(board, player, aiType)
+      .then(aiMove => {
+        const result = manager.handleAIMove(aiMove);
+
+        setBoard([...manager.board]);
+        setPlayer(manager.player);
+        setCandidates([...manager.candidates]);
+        setSelectableEnemies([...manager.selectableEnemies]);
+
+        if (result?.winner) {
+          setWinner(result.winner);
+          return;
+        }
+
+        // パス処理（AI も同じ）
+        const passInfo = manager.updateSelectableEnemies();
+        if (passInfo.pass) {
+          setIsPassing(true);
+          setTimeout(() => {
+            manager.switchPlayer();
+            manager.updateSelectableEnemies();
+            setPlayer(manager.player);
+            setSelectableEnemies([...manager.selectableEnemies]);
+            setIsPassing(false);
+          }, 1000);
+        }
+      });
+
+  }, [player, board, mode, aiType, isPassing, winner, manager]);
+
+  ///////// プレイヤーのマス数カウント /////////
   const countCells = () => {
-  let p1 = 0;
-  let p2 = 0;
+    let p1 = 0;
+    let p2 = 0;
 
-  for (const row of board) {
-    for (const cell of row) {
-      if (cell === 1) p1++;
-      if (cell === 2) p2++;
+    for (const row of board) {
+      for (const cell of row) {
+        if (cell === 1) p1++;
+        if (cell === 2) p2++;
+      }
     }
-  }
 
-  return { p1, p2 };
-};
+    return { p1, p2 };
+  };
 
- const { p1, p2 } = countCells();
+  const { p1, p2 } = countCells();
+  /////////////////////////////////////////////////
 
- 
+  /// --- プレイヤーのクリック処理 --- ///
+  const handleCellClick = (r, c) => {
 
- const handleCellClick = (r, c) => {
+    if (isPassing || winner) return;
 
-  if (isPassing || winner) return;
+    // AI モードで AI のターンならクリック禁止
+    if (mode === "ai" && player === 2) return;
 
-  // 1. 盤面更新
-  const result = manager.handleClick(r, c);
+    const result = manager.handleClick(r, c);
 
-  // 2. ★ UI同期（最初のターンでも必ず実行）
-  setBoard([...manager.board]);
-  setPlayer(manager.player);
-  setCandidates([...manager.candidates]);
-  setSelectableEnemies([...manager.selectableEnemies]);
+    setBoard([...manager.board]);
+    setPlayer(manager.player);
+    setCandidates([...manager.candidates]);
+    setSelectableEnemies([...manager.selectableEnemies]);
 
-  // 3. 勝利判定
-  if (result?.winner) {
-    setWinner(result.winner);
-    return;
-  }
+    if (result?.winner) {
+      setWinner(result.winner);
+      return;
+    }
 
-  // 4. パス判定（盤面更新後）
-  const passInfo = manager.updateSelectableEnemies();
+    const passInfo = manager.updateSelectableEnemies();
 
-  if (passInfo.pass) {
-    setIsPassing(true);
+    if (passInfo.pass) {
+      setIsPassing(true);
 
-    setTimeout(() => {
-      manager.switchPlayer();
-      manager.updateSelectableEnemies();
+      setTimeout(() => {
+        manager.switchPlayer();
+        manager.updateSelectableEnemies();
 
-      setPlayer(manager.player);
-      setSelectableEnemies([...manager.selectableEnemies]);
-      setIsPassing(false);
-    }, 1000);
+        setPlayer(manager.player);
+        setSelectableEnemies([...manager.selectableEnemies]);
+        setIsPassing(false);
+      }, 1000);
 
-    return;
-  }
-};
-
-
-
-
-
-
-
+      return;
+    }
+  };
 
   return (
-  <div style={{ textAlign: "center", marginTop: "40px" }}>
-  {!winner && (
-  <div
-    style={{
-      fontSize: "20px",
-      fontWeight: "bold",
-      marginBottom: "10px",
-      color: player === 1 ? "#FFD700" : "#1E90FF",
-    }}
-  >
-    Player {player} のターン
-  </div>
-)}
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        marginTop: "40px",
+        gap: "40px",
+      }}
+    >
+      <Board
+        board={board}
+        candidates={candidates}
+        selectableEnemies={selectableEnemies}
+        onCellClick={(r, c) => {
+          if (!isPassing) handleCellClick(r, c);
+        }}
+      />
 
-
-  <div style={{ fontSize: "18px", marginBottom: "10px" }}>
-  <span style={{ color: "#FFD700", fontWeight: "bold" }}>P1：{p1}</span>
-  <span> | </span>
-  <span style={{ color: "#1E90FF", fontWeight: "bold" }}>P2：{p2}</span>
-</div>
-
-
-  {isPassing && (
-    <div style={{
-      fontSize: "26px",
-      fontWeight: "bold",
-      color: "orange",
-      marginBottom: "10px"
-    }}>
-      パス！
+      <Pannel
+        player={player}
+        p1={p1}
+        p2={p2}
+        isPassing={isPassing}
+        winner={winner}
+        mode={mode}
+        aiType={aiType}
+      />
     </div>
-  )}
-
-  {winner && (
-    <div style={{ fontSize: "28px", fontWeight: "bold", color: "red", marginBottom: "10px" }}>
-      {winner}
-    </div>
-  )}
-
-  <Board
-    board={board}
-    candidates={candidates}
-    selectableEnemies={selectableEnemies}
-    onCellClick={(r, c) => {
-      if (!isPassing) handleCellClick(r, c);
-    }}
-  />
-</div>
-
-);
-
-
+  );
 }

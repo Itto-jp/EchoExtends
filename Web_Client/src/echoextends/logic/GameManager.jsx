@@ -72,6 +72,26 @@ export default class GameManager {
     this.candidates = getCandidates(this.board, r, c);
   }
 
+ handleAIMove(move) {
+  const { r, c, dir, dist, fromR, fromC } = move;
+
+  this.board = applyMove(
+    this.board,
+    { r, c, dir, dist, fromR, fromC },
+    this.player
+  );
+
+  this.switchPlayer();
+  this.updateSelectableEnemies();
+
+  return this.checkGameEnd();
+}
+
+
+
+
+
+
   checkGameEnd() {
     const result = checkWinner(this.board);
     if (result) {
