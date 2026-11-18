@@ -22,13 +22,26 @@ export default class GameManager {
   }
 
   updateSelectableEnemies() {
+
+    console.log(
+      "[UPDATE]",
+      "player=", this.player,
+      "first=", this.isFirstTurn
+    );
+
     if (this.isFirstTurn || this.winner) {
       this.selectableEnemies = [];
       return { pass: false };
     }
 
-    this.selectableEnemies = getSelectableEnemies(this.board, this.player);
-
+    this.selectableEnemies = 
+      getSelectableEnemies(this.board, this.player);
+///////////////////////////////////////
+    console.log(
+      "[SELECTABLE]",
+      this.selectableEnemies.length
+    );
+////////////////////////////////////////////
     const hasEmpty = this.board.flat().some((v) => v === null);
     if (this.selectableEnemies.length === 0 && hasEmpty) {
       return { pass: true };
@@ -72,6 +85,14 @@ export default class GameManager {
   }
 
   handleAIMove(move) {
+////////////////////////////////////////デバッグ用
+    console.log(
+      "[AI START]",
+     "player=", this.player,
+     "firstTurn=", this.isFirstTurn,
+     "move=", move
+    );
+//////////////////////////////////////デバッグ用
     if (!move || this.winner) {
       return { error: "invalid AI move" };
     }
@@ -99,6 +120,13 @@ export default class GameManager {
       this.candidates = [];
       this.switchPlayer();
       this.updateSelectableEnemies();
+///////////////////////////////////////////////////////////////////
+      console.log(
+        "[AI FIRST END]",
+        "nextPlayer=", this.player,
+        "enemies=", this.selectableEnemies.length
+      );
+////////////////////////////////////////////////////////////////////
       return this.checkGameEnd();
     }
 
@@ -119,6 +147,13 @@ export default class GameManager {
     this.candidates = [];
     this.switchPlayer();
     this.updateSelectableEnemies();
+////////////////////////////////////////////////////////
+    console.log(
+      "[AI END]",
+      "nextPlayer=", this.player,
+      "enemies=", this.selectableEnemies.length
+    );
+////////////////////////////////////////////////////////
     return this.checkGameEnd();
   }
 
