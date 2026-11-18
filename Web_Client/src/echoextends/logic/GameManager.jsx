@@ -23,12 +23,18 @@ export default class GameManager {
 
 
   updateSelectableEnemies() {
+/////////////////////////////////
+    console.log(
+    "[BOARD]",
+    JSON.stringify(this.board)
+  );
     
     console.log(
       "[UPDATE]",
       "player=", this.player,
       "first=", this.isFirstTurn
     );
+//////////////////////////////////
 
     if (this.isFirstTurn || this.winner) {
       this.selectableEnemies = [];
