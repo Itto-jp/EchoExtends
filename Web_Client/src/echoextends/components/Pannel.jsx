@@ -5,6 +5,7 @@ export default function Pannel({
   p1,
   p2,
   isPassing,
+  passPlayer,
   winner,
   mode,
   aiType,
@@ -83,7 +84,7 @@ export default function Pannel({
       `
     }}
   >
-    パス！
+    Player {passPlayer} がパス！
   </div>
 )}
 

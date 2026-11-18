@@ -17,10 +17,11 @@ export default function Game({ mode, aiType, firstPlayer }) {
   const aiPlayer =
     mode === "ai" ? (resolvedFirstPlayer === "ai" ? 1 : 2) : null;
 
-  const [isPassing, setIsPassing] = useState(false);
+  const [isPassing, setIsPassing] = useState(false); 
+  const [passPlayer, setPassPlayer] = useState(null);
   const [board, setBoard] = useState(manager.board);
   const [player, setPlayer] = useState(manager.player);
-  const [candidates, setCandidates] = useState(manager.candidates);
+  const [candidates, setCandidates] = useState(manager.candidates); //マス候補
   const [selectableEnemies, setSelectableEnemies] = useState(
     manager.selectableEnemies
   );
@@ -64,7 +65,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
           setPlayer(manager.player);
           setSelectableEnemies([...manager.selectableEnemies]);
           setIsPassing(false);
-        }, 1000);
+        }, 3000);
       }
     });
   }, [
@@ -115,6 +116,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
 
     const passInfo = manager.updateSelectableEnemies();
     if (passInfo.pass) {
+      setPassPlayer(manager.player);
       setIsPassing(true);
 
       setTimeout(() => {
@@ -152,6 +154,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
           p1={p1}
           p2={p2}
           isPassing={isPassing}
+          passPlayer={passPlayer}
           winner={winner}
           mode={mode}
           aiType={aiType}
