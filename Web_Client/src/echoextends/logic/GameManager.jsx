@@ -21,8 +21,9 @@ export default class GameManager {
     this.player = this.player === 1 ? 2 : 1;
   }
 
-  updateSelectableEnemies() {
 
+  updateSelectableEnemies() {
+    
     console.log(
       "[UPDATE]",
       "player=", this.player,
@@ -38,9 +39,11 @@ export default class GameManager {
       getSelectableEnemies(this.board, this.player);
 ///////////////////////////////////////
     console.log(
-      "[SELECTABLE]",
-      this.selectableEnemies.length
-    );
+  "[SELECTABLE DETAIL]",
+  "player=",
+  this.player,
+  this.selectableEnemies
+);
 ////////////////////////////////////////////
     const hasEmpty = this.board.flat().some((v) => v === null);
     if (this.selectableEnemies.length === 0 && hasEmpty) {
