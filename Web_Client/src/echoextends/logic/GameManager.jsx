@@ -146,7 +146,12 @@ export default class GameManager {
       { r, c, dir, dist, fromR, fromC },
       this.player
     );
-
+////////////////////////////////////////////
+    console.log(
+      "[BOARD]",
+      JSON.stringify(this.board)
+    );
+////////////////////////////////////////////
     this.candidates = [];
     this.switchPlayer();
     this.updateSelectableEnemies();
