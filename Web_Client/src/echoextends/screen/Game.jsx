@@ -40,7 +40,29 @@ export default function Game({ mode, aiType, firstPlayer }) {
     if (player !== aiPlayer) return;
     if (winner || isPassing || aiError) return;
 
+    console.log(
+      "[SEND]",
+      {
+        player,
+        aiPlayer,
+        managerPlayer: manager.player,
+        firstTurn: manager.isFirstTurn
+      }
+    );
+
     requestAIMove(board, manager.player, aiType, manager.isFirstTurn).then((aiMove) => {
+
+      ////////////////////////////////////////////////////////////////////////
+      console.log(
+        "[RECEIVE]",
+        {
+          player,
+          aiPlayer,
+          managerPlayer: manager.player,
+          firstTurn: manager.isFirstTurn
+        }
+      );
+
       /////////////////////////////////////////////////////////
       console.log(
         "[SEND]",
