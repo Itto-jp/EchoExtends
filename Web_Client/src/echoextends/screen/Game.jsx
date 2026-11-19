@@ -40,7 +40,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
     if (player !== aiPlayer) return;
     if (winner || isPassing || aiError) return;
 
-    requestAIMove(board, player, aiType, manager.isFirstTurn).then((aiMove) => {
+    requestAIMove(board, manager.player, aiType, manager.isFirstTurn).then((aiMove) => {
       /////////////////////////////////////////////////////////
       console.log(
         "[SEND]",
