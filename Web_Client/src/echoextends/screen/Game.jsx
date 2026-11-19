@@ -34,6 +34,15 @@ export default function Game({ mode, aiType, firstPlayer }) {
     if (winner || isPassing || aiError) return;
 
     requestAIMove(board, player, aiType, manager.isFirstTurn).then((aiMove) => {
+      /////////////////////////////////////////////////////////
+      console.log(
+        "[SEND]",
+        "statePlayer=", player,
+        "managerPlayer=", manager.player,
+        "first=", manager.isFirstTurn
+      );
+      ////////////////////////////////////////////////////////
+
       if (!aiMove || aiMove.error) {
         setAIError("AIサーバーから有効な手を取得できませんでした。");
         return;
@@ -59,13 +68,14 @@ export default function Game({ mode, aiType, firstPlayer }) {
       const passInfo = manager.updateSelectableEnemies();
       if (passInfo.pass) {
         setIsPassing(true);
+        //setPassPlayer(manager.player);
         setTimeout(() => {
           manager.switchPlayer();
           manager.updateSelectableEnemies();
           setPlayer(manager.player);
           setSelectableEnemies([...manager.selectableEnemies]);
           setIsPassing(false);
-        }, 3000);
+        }, 1000);///////////////////////////////////////
       }
     });
   }, [
@@ -116,7 +126,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
 
     const passInfo = manager.updateSelectableEnemies();
     if (passInfo.pass) {
-      setPassPlayer(manager.player);
+      //setPassPlayer(manager.player);
       setIsPassing(true);
 
       setTimeout(() => {
@@ -125,7 +135,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
         setPlayer(manager.player);
         setSelectableEnemies([...manager.selectableEnemies]);
         setIsPassing(false);
-      }, 1000);
+      }, 1000);/////////////////////////////////////////////////
     }
   };
 
