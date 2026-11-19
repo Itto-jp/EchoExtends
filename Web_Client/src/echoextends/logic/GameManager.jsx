@@ -95,12 +95,19 @@ export default class GameManager {
 
   handleAIMove(move) {
 ////////////////////////////////////////デバッグ用
+
     console.log(
       "[AI START]",
      "player=", this.player,
      "firstTurn=", this.isFirstTurn,
      "move=", move
     );
+
+     console.log(
+  "[MOVE DETAIL]",
+  JSON.stringify(move)
+);
+
 //////////////////////////////////////デバッグ用
     if (!move || this.winner) {
       return { error: "invalid AI move" };

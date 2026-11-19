@@ -3,6 +3,8 @@
 import random
 from ai.logic import get_selectable_enemies, get_candidates
 
+
+
 DIRECTION_MAP = {
     "up": (-1, 0),
     "down": (1, 0),
@@ -23,6 +25,11 @@ def _pass_move():
 
 
 def random_ai(board, turn, isFirstTurn):
+    print(
+        "AI",
+        "turn=", turn,
+        "first=", isFirstTurn
+    )
     size = len(board)
 
     # The very first move is placement on any empty cell.
