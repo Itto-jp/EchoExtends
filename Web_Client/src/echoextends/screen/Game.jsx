@@ -29,6 +29,13 @@ export default function Game({ mode, aiType, firstPlayer }) {
   const [aiError, setAIError] = useState("");
 
   useEffect(() => {
+
+    console.log(
+      "[USE EFFECT]",
+      "player=", player,
+      "aiPlayer=", aiPlayer
+    );
+
     if (mode !== "ai") return;
     if (player !== aiPlayer) return;
     if (winner || isPassing || aiError) return;
