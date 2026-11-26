@@ -4,7 +4,9 @@ import GameManager from "../logic/GameManager";
 import Pannel from "../components/Pannel";
 import { requestAIMove } from "../api/AI_Client";
 
-export default function Game({ mode, aiType, firstPlayer }) {
+export default function Game({ 
+  mode, aiType, firstPlayer, aiType1, aiType2,
+ }) {
   const [manager] = useState(() => new GameManager(7));
   const [resolvedFirstPlayer] = useState(() => {
     if (firstPlayer === "random") {
@@ -17,6 +19,8 @@ export default function Game({ mode, aiType, firstPlayer }) {
   const aiPlayer =
     mode === "ai" ? (resolvedFirstPlayer === "ai" ? 1 : 2) : null;
 
+  const isAIVsAI = mode === "aivsai"
+
   const [isPassing, setIsPassing] = useState(false); 
   const [passPlayer, setPassPlayer] = useState(null);
   const [board, setBoard] = useState(manager.board);
@@ -28,19 +32,33 @@ export default function Game({ mode, aiType, firstPlayer }) {
   const [winner, setWinner] = useState(manager.winner);
   const [aiError, setAIError] = useState("");
 
-  useEffect(() => {
+  const [logs, setLogs] = useState([
+    {
+      type: "start",
+      player: 1,
+      text: "Player1は好きなマスを1マス選んでください",
+    },
+  ]);
 
-    console.log(
+  const addLog = (log) => {
+    setLogs((prev) => [...prev, log]);
+  };
+
+  const [lastMoveCells, setLastMoveCells] = useState([]);
+
+  useEffect(() => {
+//////////////////////
+    {/*console.log(
       "[USE EFFECT]",
       "player=", player,
       "aiPlayer=", aiPlayer
-    );
-
-    if (mode !== "ai") return;
-    if (player !== aiPlayer) return;
+    );*/}
+/////////////////////////
+    if (mode !== "ai" && mode !== "aivsai" ) return;
+    if (mode === "ai" && player !== aiPlayer) return;
     if (winner || isPassing || aiError) return;
-
-    console.log(
+///////////////////////////
+    {/*console.log(
       "[SEND]",
       {
         player,
@@ -48,12 +66,23 @@ export default function Game({ mode, aiType, firstPlayer }) {
         managerPlayer: manager.player,
         firstTurn: manager.isFirstTurn
       }
-    );
+    );*/}
+////////////////////////////////////////////
+    const currentAI = 
+      mode === "aivsai" 
+        ? (
+          player === 1
+          ? aiType1
+          : aiType2
+        )
+        : aiType;
 
-    requestAIMove(board, manager.player, aiType, manager.isFirstTurn).then((aiMove) => {
+    requestAIMove(
+      board, manager.player, currentAI, manager.isFirstTurn
+    ).then((aiMove) => {
 
       ////////////////////////////////////////////////////////////////////////
-      console.log(
+      {/*console.log(
         "[RECEIVE]",
         {
           player,
@@ -61,15 +90,14 @@ export default function Game({ mode, aiType, firstPlayer }) {
           managerPlayer: manager.player,
           firstTurn: manager.isFirstTurn
         }
-      );
-
+      );*/}
       /////////////////////////////////////////////////////////
-      console.log(
+      {/*console.log(
         "[SEND]",
         "statePlayer=", player,
         "managerPlayer=", manager.player,
         "first=", manager.isFirstTurn
-      );
+      );*/}
       ////////////////////////////////////////////////////////
 
       if (!aiMove || aiMove.error) {
@@ -77,41 +105,110 @@ export default function Game({ mode, aiType, firstPlayer }) {
         return;
       }
 
-      const result = manager.handleAIMove(aiMove);
-      if (result?.error) {
-        setAIError(result.error);
-        return;
-      }
+      setTimeout(() => {
+        const beforeBoard = manager.board.map(row => [...row]);
+        const result = manager.handleAIMove(aiMove);
+        const afterBoard = manager.board;
 
-      setBoard([...manager.board]);
-      setPlayer(manager.player);
-      setCandidates([...manager.candidates]);
-      setSelectableEnemies([...manager.selectableEnemies]);
+        const changed = [];
 
-      if (result?.winner) {
-        setWinner(result.winner);
-        return;
-      }
+        for (let r = 0; r < afterBoard.length; r++) {
+          for (let c = 0; c < afterBoard[r].length; c++) {
 
-      // If the next player has no legal move, show pass and skip the turn.
-      const passInfo = manager.updateSelectableEnemies();
-      if (passInfo.pass) {
-        setIsPassing(true);
-        //setPassPlayer(manager.player);
+            if (beforeBoard[r][c] !== afterBoard[r][c]) {
+              changed.push({ r, c });
+            }
+
+          }
+        }
+
+        setLastMoveCells(changed);
         setTimeout(() => {
-          manager.switchPlayer();
-          manager.updateSelectableEnemies();
-          setPlayer(manager.player);
-          setSelectableEnemies([...manager.selectableEnemies]);
-          setIsPassing(false);
-        }, 1000);///////////////////////////////////////
-      }
+          setLastMoveCells([]);
+        }, 1000);
+
+        if(changed.length > 0){
+
+          const cellsText = 
+            changed
+              .map(cell => `[${cell.r},${cell.c}]`)
+              .join("と");
+
+          const movedPlayer = 
+            manager.player === 1
+              ? 2 : 1;
+
+          addLog({
+            type: "move",
+            player: movedPlayer,
+            text: `Player${movedPlayer}が${cellsText}を塗りました`
+          });
+        }
+
+        if (result?.error) {
+          setAIError(result.error);
+          return;
+        }
+
+        setBoard([...manager.board]);
+        setPlayer(manager.player);
+        setCandidates([...manager.candidates]);
+        setSelectableEnemies([...manager.selectableEnemies]);
+
+        if (result?.winner) {
+
+          addLog({
+            type: "winner",
+            player: result.winner === "Player 1 の勝ち！" ? 1 : 2,
+
+            text:
+              
+                `${result.winner} \n`+
+                `-Player1 : ${p1}マス \n`+
+                `-Player2 : ${p2}マス`
+              
+            });
+          
+          setWinner(result.winner);
+          return;
+        }
+
+        // If the next player has no legal move, show pass and skip the turn.
+        const passInfo = manager.updateSelectableEnemies();
+        if (passInfo.pass) {
+          setIsPassing(true);
+          setPassPlayer(manager.player);
+
+          const passPlayer = 
+          manager.player;
+          
+          addLog({
+            type: "pass",
+            player: passPlayer,
+            text: `Player${passPlayer}に有効手がないためパスしました`
+          });
+
+          setTimeout(() => {
+            manager.switchPlayer();
+            manager.updateSelectableEnemies();
+            setPlayer(manager.player);
+            setSelectableEnemies([...manager.selectableEnemies]);
+
+            setPassPlayer(null);
+            setIsPassing(false);
+          }, 3000);///////////////////////////////////////
+        }
+
+      }, 3000);/////////////////////////////////////////////////////
+      
     });
   }, [
     player,
     board,
     mode,
     aiType,
+    aiType1,
+    aiType2,
     aiPlayer,
     isPassing,
     winner,
@@ -141,34 +238,127 @@ export default function Game({ mode, aiType, firstPlayer }) {
     // Disable human input during the AI's turn, regardless of who moved first.
     if (mode === "ai" && player === aiPlayer) return;
 
+    const beforeBoard =
+      manager.board.map(row => [...row]);
+
+
     const result = manager.handleClick(r, c);
+
+
+    const afterBoard = manager.board;
+
+    const changed = [];
+
+    for (let r = 0; r < afterBoard.length; r++) {
+      for (let c = 0; c < afterBoard[r].length; c++) {
+
+        if (beforeBoard[r][c] !== afterBoard[r][c]) {
+          changed.push({ r, c });
+        }
+
+      }
+    }
+
+    setLastMoveCells(changed);
+    setTimeout(() => {
+      setLastMoveCells([]);
+    },1000);
+
+    if(changed.length > 0){
+
+      const cellsText = 
+        changed
+          .map(cell => `[${cell.r},${cell.c}]`)
+          .join("と");
+
+        const movedPlayer = 
+          manager.player === 1
+            ? 2 : 1;
+
+        addLog({
+          type: "move",
+          player: movedPlayer,
+          text: `Player${movedPlayer}が${cellsText}を塗りました`
+        });
+
+    }
 
     setBoard([...manager.board]);
     setPlayer(manager.player);
     setCandidates([...manager.candidates]);
     setSelectableEnemies([...manager.selectableEnemies]);
 
+
     if (result?.winner) {
+
+      addLog({
+            type: "winner",
+            player: result.winner === "Player 1 の勝ち！" ? 1 : 2,
+
+            text:            
+                `${result.winner} \n`+
+                `-Player1 : ${countCells().p1}マス\n`+
+                `-Player2 : ${countCells().p2}マス`
+          });
+
       setWinner(result.winner);
       return;
     }
 
     const passInfo = manager.updateSelectableEnemies();
     if (passInfo.pass) {
-      //setPassPlayer(manager.player);
+      setPassPlayer(manager.player);
       setIsPassing(true);
+
+      const passPlayer = 
+          manager.player;
+          addLog({
+            type: "pass",
+            player: passPlayer,
+            text: `Player${passPlayer}に有効手がないためパスしました`
+          });
 
       setTimeout(() => {
         manager.switchPlayer();
         manager.updateSelectableEnemies();
         setPlayer(manager.player);
         setSelectableEnemies([...manager.selectableEnemies]);
+        setPassPlayer(null);
         setIsPassing(false);
-      }, 1000);/////////////////////////////////////////////////
+      }, 3000);
     }
   };
 
   return (
+
+    <div>
+      {mode === "ai" && (
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: "28px",
+            fontWeight: "bold",
+            marginBottom: "20px",
+            color:
+              (resolvedFirstPlayer === "player")
+               ? "#FFD700"
+               : "#1E90FF",
+            textShadow: `
+              -1px -1px 0 #000,
+               1px -1px 0 #000,
+              -1px  1px 0 #000,
+               1px  1px 0 #000
+            `,
+          }}
+        >
+          あなたは
+          {resolvedFirstPlayer === "player"
+            ? "Player 1"
+            : "Player 2"}
+            です
+        </div>
+      )}
+
     <div
       style={{
         display: "flex",
@@ -182,6 +372,7 @@ export default function Game({ mode, aiType, firstPlayer }) {
         board={board}
         candidates={candidates}
         selectableEnemies={selectableEnemies}
+        lastMoveCells={lastMoveCells}
         onCellClick={(r, c) => {
           if (!isPassing) handleCellClick(r, c);
         }}
@@ -195,13 +386,21 @@ export default function Game({ mode, aiType, firstPlayer }) {
           isPassing={isPassing}
           passPlayer={passPlayer}
           winner={winner}
+          setWinner={setWinner}
           mode={mode}
           aiType={aiType}
+          aiType1={aiType1}
+          aiType2={aiType2}
+          logs={logs}
         />
+
+        
+
         {aiError && (
           <p style={{ color: "red", width: "220px" }}>{aiError}</p>
         )}
       </div>
     </div>
+  </div>
   );
 }

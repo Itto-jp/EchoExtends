@@ -9,9 +9,13 @@ export default function Title({ onSelectMode }) { //選択したモードを返�
       <div style={{ marginTop: "40px", display: "flex", flexDirection: "column", gap: "20px" }}> {/*ボタンの配置*/}
 
         {/*選択したモードの値を渡す*/}
-        <Button label="ローカル対戦" tag="local_mode" onClick={() => onSelectMode("local")} /> 
-        <Button label="AI 対戦" tag="ai_mode" onClick={() => onSelectMode("ai")} />
-        <Button label="通信対戦" tag="online_mode" onClick={() => onSelectMode("online")} />
+        <Button label="ローカル対戦" tag="local_mode"  onClick={() => onSelectMode("local")} /> 
+        <Button label="AI 対戦"     tag="ai_mode"     onClick={() => onSelectMode("ai")} />
+        <Button label="AI vs AI"    tag="aivsai_mode"     onClick={() => onSelectMode("aivsai")} />
+        {/* 
+          <Button label="通信対戦"    tag="online_mode" onClick={() => onSelectMode("online")} /> 
+          */}
+
           
       </div>
 

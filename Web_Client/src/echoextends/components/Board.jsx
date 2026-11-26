@@ -1,6 +1,8 @@
 import Cell from "./Cell";
 
-export default function Board({ board, candidates, selectableEnemies, onCellClick }) {
+export default function Board({
+   board, candidates, selectableEnemies, onCellClick, lastMoveCells 
+  }) {
   const size = board.length;
 
   return (
@@ -12,6 +14,13 @@ export default function Board({ board, candidates, selectableEnemies, onCellClic
             value={cell}
             isCandidate={candidates.some(ca => ca.r === r && ca.c === c)}
             isSelectableEnemy={selectableEnemies.some(se => se.r === r && se.c === c)}
+            
+            isLastMove={
+              lastMoveCells.some(
+                lm => lm.r === r && lm.c === c
+              )
+            }
+            
             onClick={() => 
                  onCellClick(r, c)
             }
